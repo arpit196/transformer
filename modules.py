@@ -194,8 +194,8 @@ def multihead_attention(queries, keys, values, key_masks,
         # Attention
         outputs1 = scaled_dot_product_attention(Q1_, K1_, V1_, key_masks, causality, dropout_rate, training)
         outputs2 = scaled_dot_product_attention(Q2_, K2_, V2_, key_masks, causality, dropout_rate, training)
-        outputs =tf.concat([outputs1,outputs2],axis=1)
-
+        outputs = tf.concat([outputs1,outputs2],axis=1)
+        outputs = tf.layers.dense(outputs, d_model)
         # Restore shape
         outputs = tf.concat(tf.split(outputs, num_heads, axis=0), axis=2 ) # (N, T_q, d_model)
               

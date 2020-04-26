@@ -199,7 +199,6 @@ def multihead_attention(queries, keys, values, key_masks,
         outputs2 = tf.concat(tf.split(outputs2, num_heads, axis=0), axis=2 )
         
         outputs = tf.concat([outputs1,outputs2],axis=2)
-        print(outputs.shape)
         outputs = tf.layers.dense(outputs, d_model)
         # Restore shape
         #outputs = tf.concat(tf.split(outputs, num_heads, axis=0), axis=2 ) # (N, T_q, d_model)

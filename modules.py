@@ -173,17 +173,28 @@ def multihead_attention(queries, keys, values, key_masks,
     d_model = queries.get_shape().as_list()[-1]
     with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
         # Linear projections
-        Q = tf.layers.dense(queries, d_model, use_bias=True) # (N, T_q, d_model)
-        K = tf.layers.dense(keys, d_model, use_bias=True) # (N, T_k, d_model)
-        V = tf.layers.dense(values, d_model, use_bias=True) # (N, T_k, d_model)
+        #Q = tf.layers.dense(queries, d_model, use_bias=True) # (N, T_q, d_model)
+        Q1 = tf.layers.dense(queries, d_model, use_bias=True) # (N, T_q, d_model)
+        Q2 = tf.layers.dense(queries, d_model, use_bias=True) # (N, T_q, d_model)
+        #K = tf.layers.dense(keys, d_model, use_bias=True) # (N, T_k, d_model)
+        K1 = tf.layers.dense(keys, d_model, use_bias=True) # (N, T_q, d_model)
+        K2 = tf.layers.dense(keys, d_model, use_bias=True) # (N, T_q, d_model)
+        #V = tf.layers.dense(values, d_model, use_bias=True) # (N, T_k, d_model)
+        V1 = tf.layers.dense(values, d_model, use_bias=True) # (N, T_q, d_model)
+        V2 = tf.layers.dense(queries, d_model, use_bias=True) # (N, T_q, d_model)
         
         # Split and concat
-        Q_ = tf.concat(tf.split(Q, num_heads, axis=2), axis=0) # (h*N, T_q, d_model/h)
-        K_ = tf.concat(tf.split(K, num_heads, axis=2), axis=0) # (h*N, T_k, d_model/h)
-        V_ = tf.concat(tf.split(V, num_heads, axis=2), axis=0) # (h*N, T_k, d_model/h)
+        Q1_ = tf.concat(tf.split(Q1, num_heads, axis=2), axis=0) # (h*N, T_q, d_model/h)
+        Q2_ = tf.concat(tf.split(Q2, num_heads, axis=2), axis=0) # (h*N, T_q, d_model/h)
+        K1_ = tf.concat(tf.split(K1, num_heads, axis=2), axis=0) # (h*N, T_k, d_model/h)
+        K2_ = tf.concat(tf.split(K2, num_heads, axis=2), axis=0) # (h*N, T_q, d_model/h)
+        V1_ = tf.concat(tf.split(V1, num_heads, axis=2), axis=0) # (h*N, T_k, d_model/h)
+        V2_ = tf.concat(tf.split(V2, num_heads, axis=2), axis=0) # (h*N, T_q, d_model/h)
 
         # Attention
-        outputs = scaled_dot_product_attention(Q_, K_, V_, key_masks, causality, dropout_rate, training)
+        outputs1 = scaled_dot_product_attention(Q1_, K1_, V1_, key_masks, causality, dropout_rate, training)
+        outputs2 = scaled_dot_product_attention(Q2_, K2_, V2_, key_masks, causality, dropout_rate, training)
+        output =tf.concat([outputs1,outputs2],axis=1)
 
         # Restore shape
         outputs = tf.concat(tf.split(outputs, num_heads, axis=0), axis=2 ) # (N, T_q, d_model)

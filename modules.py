@@ -181,7 +181,7 @@ def multihead_attention(queries, keys, values, key_masks,
         K2 = tf.layers.dense(keys, d_model, use_bias=True) # (N, T_q, d_model)
         #V = tf.layers.dense(values, d_model, use_bias=True) # (N, T_k, d_model)
         V1 = tf.layers.dense(values, d_model, use_bias=True) # (N, T_q, d_model)
-        V2 = tf.layers.dense(queries, d_model, use_bias=True) # (N, T_q, d_model)
+        V2 = tf.layers.dense(values, d_model, use_bias=True) # (N, T_q, d_model)
         
         # Split and concat
         Q1_ = tf.concat(tf.split(Q1, num_heads, axis=2), axis=0) # (h*N, T_q, d_model/h)

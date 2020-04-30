@@ -18,9 +18,11 @@ class Hparams:
                              help="english evaluation segmented data")
     parser.add_argument('--eval3', default='iwslt2016/prepro/eval.en',
                              help="english evaluation unsegmented data")
+    parser.add_argument('--eval3', default='iwslt2016/prepro/eval.en',
+                             help="english evaluation unsegmented data")
 
     ## vocabulary
-    parser.add_argument('--vocab', default='iwslt2016/segmented/bpe.vocab',
+    parser.add_argument('--vocab_size', default='iwslt2016/segmented/bpe.vocab',
                         help="vocabulary file path")
 
     # training scheme
@@ -35,6 +37,8 @@ class Hparams:
 
     # model
     parser.add_argument('--d_model', default=512, type=int,
+                        help="hidden dimension of encoder/decoder")
+    parser.add_argument('--num_units', default=1024, type=int,
                         help="hidden dimension of encoder/decoder")
     parser.add_argument('--d_ff', default=2048, type=int,
                         help="hidden dimension of feedforward layer")

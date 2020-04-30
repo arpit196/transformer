@@ -7,7 +7,7 @@ https://www.github.com/kyubyong/transformer
 '''
 import tensorflow as tf
 
-from model import Transformer
+from model1 import Transformer
 from model.ut import UniversalTransformer
 from tqdm import tqdm
 from data_load import get_batch

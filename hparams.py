@@ -20,7 +20,7 @@ class Hparams:
                              help="english evaluation unsegmented data")
 
     ## vocabulary
-    parser.add_argument('--vocab_size', default='iwslt2016/segmented/bpe.vocab',
+    parser.add_argument('--vocab', default='iwslt2016/segmented/bpe.vocab',
                         help="vocabulary file path")
 
     # training scheme

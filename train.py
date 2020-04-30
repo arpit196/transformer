@@ -8,6 +8,7 @@ https://www.github.com/kyubyong/transformer
 import tensorflow as tf
 
 from model import Transformer
+from model.ut import UniversalTransformer
 from tqdm import tqdm
 from data_load import get_batch
 from utils import save_hparams, save_variable_specs, get_hypotheses, calc_bleu
@@ -43,7 +44,7 @@ train_init_op = iter.make_initializer(train_batches)
 eval_init_op = iter.make_initializer(eval_batches)
 
 logging.info("# Load model")
-m = Transformer(hp)
+m = UniversalTransformer(hp)
 loss, train_op, global_step, train_summaries = m.train(xs, ys)
 y_hat, eval_summaries = m.eval(xs, ys)
 # y_hat = m.infer(xs, ys)

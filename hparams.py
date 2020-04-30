@@ -18,8 +18,6 @@ class Hparams:
                              help="english evaluation segmented data")
     parser.add_argument('--eval3', default='iwslt2016/prepro/eval.en',
                              help="english evaluation unsegmented data")
-    parser.add_argument('--eval3', default='iwslt2016/prepro/eval.en',
-                             help="english evaluation unsegmented data")
 
     ## vocabulary
     parser.add_argument('--vocab_size', default='iwslt2016/segmented/bpe.vocab',

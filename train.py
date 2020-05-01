@@ -45,7 +45,7 @@ eval_init_op = iter.make_initializer(eval_batches)
 
 logging.info("# Load model")
 m = UniversalTransformer(hp, True)
-loss, train_op, global_step, train_summaries = m.train(xs, ys)
+loss, train_op, global_step, train_summaries = m.fit(xs, ys)
 y_hat, eval_summaries = m.eval(xs, ys)
 # y_hat = m.infer(xs, ys)
 

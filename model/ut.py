@@ -16,12 +16,12 @@ class UniversalTransformer(tf.keras.Model):
         super(UniversalTransformer, self).__init__()
         self.hparams = hparams
         self.is_train = is_train
-        self.embedding_layer = EmbeddingSharedWeights(hparams['vocab_size'], hparams['num_units'])
+        self.embedding_layer = EmbeddingSharedWeights(hparam.vocab_size, hparams.num_units)
         self.encoder_stack = EncoderStack(hparams, is_train)
-        self.encoder_embedding_dropout = tf.keras.layers.Dropout(hparams['dropout_rate'])
+        self.encoder_embedding_dropout = tf.keras.layers.Dropout(hparams.dropout_rate)
         
         self.decoder_stack = DecoderStack(hparams, is_train)
-        self.decoder_embedding_dropout = tf.keras.layers.Dropout(hparams['dropout_rate'])
+        self.decoder_embedding_dropout = tf.keras.layers.Dropout(hparams.dropout_rate)
         
         self.global_step = tf.train.get_or_create_global_step()
     
@@ -45,8 +45,8 @@ class UniversalTransformer(tf.keras.Model):
     def build_graph(self):
         with tf.name_scope('graph'):
             self.is_training_ph = tf.placeholder(name='is_training', shape=(), dtype=bool)
-            self.encoder_inputs_ph = tf.placeholder(name='encoder_inputs', shape=[self.hparams['batch_size'], self.hparams['max_length']], dtype=tf.int32)
-            self.decoder_inputs_ph = tf.placeholder(name='decoder_inputs', shape=[self.hparams['batch_size'], self.hparams['max_length']], dtype=tf.int32)
+            self.encoder_inputs_ph = tf.placeholder(name='encoder_inputs', shape=[self.hparams.batch_size, self.hparams.max_length], dtype=tf.int32)
+            self.decoder_inputs_ph = tf.placeholder(name='decoder_inputs', shape=[self.hparams.batch_size, self.hparams.max_length], dtype=tf.int32)
 
             self.logits = self.call(self.encoder_inputs_ph, self.decoder_inputs_ph)
             
@@ -133,7 +133,7 @@ class UniversalTransformer(tf.keras.Model):
         decoder_inputs = tf.pad(decoder_inputs, [[0, 0], [1, 0], [0, 0]])[:, :-1, :]
         # add positional encoding
         length = tf.shape(decoder_inputs)[1]
-        decoder_inputs += model_utils.get_position_encoding(length, self.hparams['num_units'])
+        decoder_inputs += model_utils.get_position_encoding(length, self.hparams.num_units)
         
         if self.is_train:
             decoder_inputs = self.decoder_embedding_dropout(decoder_inputs)
@@ -145,7 +145,7 @@ class UniversalTransformer(tf.keras.Model):
     
     def learning_rate(self):
         step = tf.to_float(self.global_step)
-        rate = tf.minimum(step ** -0.5, step * self.hparams['warmup_steps'] ** -1.5) * self.hparams['num_units'] ** -0.5
+        rate = tf.minimum(step ** -0.5, step * self.hparams.warmup_steps ** -1.5) * self.hparams.num_units ** -0.5
         return rate
 
 
@@ -196,29 +196,29 @@ class EncoderStack(tf.keras.Model):
         super(EncoderStack, self).__init__()
         self.hparams = hparams
         
-        self_attention_layer = SelfAttention(hparams['num_units'], hparams['num_heads'], hparams['dropout_rate'], is_train)
-        ffn_layer = FeedForwardNetwork(hparams['num_units'], hparams['num_filter_units'], hparams['dropout_rate'], is_train)
-        self.self_attention_wrapper = LayerWrapper(self_attention_layer, hparams['num_units'], hparams['dropout_rate'], is_train)
-        self.ffn_wrapper = LayerWrapper(ffn_layer, hparams['num_units'], hparams['dropout_rate'], is_train)
-        self.output_norm = LayerNormalization(hparams['num_units'])
+        self_attention_layer = SelfAttention(hparams.num_units, hparams.num_heads, hparams.dropout_rate, is_train)
+        ffn_layer = FeedForwardNetwork(hparams.num_units, hparams.num_filter_units, hparams.dropout_rate, is_train)
+        self.self_attention_wrapper = LayerWrapper(self_attention_layer, hparams.num_units, hparams.dropout_rate, is_train)
+        self.ffn_wrapper = LayerWrapper(ffn_layer, hparams.num_units, hparams.dropout_rate, is_train)
+        self.output_norm = LayerNormalization(hparams.num_units)
         self.pondering_layer = tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, use_bias=True, bias_initializer=tf.constant_initializer(1.0))
         self.num_head_layer = tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, use_bias=True, bias_initializer=tf.constant_initializer(1.0))
     
     def call(self, encoder_inputs, attention_bias, inputs_padding):
         batch_size, length, hidden_size = tf.unstack(tf.shape(encoder_inputs))
         act = ACT(batch_size, length, hidden_size)
-        halt_threshold = 1.0 - self.hparams['act_epsilon']
+        halt_threshold = 1.0 - self.hparams.act_epsilon
         
         state = encoder_inputs
         previous_state = tf.zeros_like(state, name='previous_state')
-        for step in range(self.hparams['act_max_step']):
+        for step in range(self.hparams.act_max_step):
             # judge to continue
             if not act.should_continue(halt_threshold):
                 break
             
             # position & timestep encoding
-            state += model_utils.get_position_encoding(self.hparams['max_length'], hidden_size)
-            state += model_utils.get_timestep_encoding(step, self.hparams['act_max_step'], hidden_size)
+            state += model_utils.get_position_encoding(self.hparams.max_length, hidden_size)
+            state += model_utils.get_timestep_encoding(step, self.hparams.act_max_step, hidden_size)
             
             # to judge pondering
             pondering = self.pondering_layer(state)
@@ -235,14 +235,14 @@ class EncoderStack(tf.keras.Model):
             update_weights = act(pondering, halt_threshold)
             
             if(num_head_3logit):
-                self_attention_layer = SelfAttention(hparams['num_units'], 3, hparams['dropout_rate'], is_train) 
+                self_attention_layer = SelfAttention(hparams.num_units, 3, hparams.dropout_rate, is_train) 
             elif(num_head_5logit):
-                self_attention_layer = SelfAttention(hparams['num_units'], 5, hparams['dropout_rate'], is_train) 
+                self_attention_layer = SelfAttention(hparams.num_units, 5, hparams.dropout_rate, is_train) 
             
-            ffn_layer = FeedForwardNetwork(hparams['num_units'], hparams['num_filter_units'], hparams['dropout_rate'], is_train)
-            self.self_attention_wrapper = LayerWrapper(self_attention_layer, hparams['num_units'], hparams['dropout_rate'], is_train)
-            self.ffn_wrapper = LayerWrapper(ffn_layer, hparams['num_units'], hparams['dropout_rate'], is_train)
-            self.output_norm = LayerNormalization(hparams['num_units'])
+            ffn_layer = FeedForwardNetwork(hparams.num_units, hparams.num_filter_units, hparams.dropout_rate, is_train)
+            self.self_attention_wrapper = LayerWrapper(self_attention_layer, hparams.num_units, hparams.dropout_rate, is_train)
+            self.ffn_wrapper = LayerWrapper(ffn_layer, hparams.num_units, hparams.dropout_rate, is_train)
+            self.output_norm = LayerNormalization(hparams.num_units)
         
             state = self.self_attention_wrapper(state, attention_bias)
             state = self.ffn_wrapper(state, inputs_padding)
@@ -261,30 +261,29 @@ class DecoderStack(tf.keras.Model):
         self.my_layers = []
         
         self.hparams = hparams
-        self_attention_layer = SelfAttention(hparams['num_units'], hparams['num_heads'], hparams['dropout_rate'], is_train)
-        enc_dec_attention_layer = MultiheadAttention(hparams['num_units'], hparams['num_heads'], hparams['dropout_rate'], is_train)
-        ffn_layer = FeedForwardNetwork(hparams['num_units'], hparams['num_filter_units'], hparams['dropout_rate'], is_train)
-        self.self_attention_wrapper = LayerWrapper(self_attention_layer, hparams['num_units'], hparams['dropout_rate'], is_train)
-        self.enc_dec_attention_wrapper = LayerWrapper(enc_dec_attention_layer, hparams['num_units'], hparams['dropout_rate'], is_train)
-        self.ffn_wrapper = LayerWrapper(ffn_layer, hparams['num_units'], hparams['dropout_rate'], is_train)
-        self.output_norm = LayerNormalization(hparams['num_units'])
+        self_attention_layer = SelfAttention(hparams.num_units, hparams.num_heads, hparams.dropout_rate, is_train)
+        ffn_layer = FeedForwardNetwork(hparams.num_units, hparams.num_filter_units, hparams.dropout_rate, is_train)
+        self.self_attention_wrapper = LayerWrapper(self_attention_layer, hparams.num_units, hparams.dropout_rate, is_train)
+        self.ffn_wrapper = LayerWrapper(ffn_layer, hparams.num_units, hparams.dropout_rate, is_train)
+        self.output_norm = LayerNormalization(hparams.num_units)
         self.pondering_layer = tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, use_bias=True, bias_initializer=tf.constant_initializer(1.0))
-    
+        self.num_head_layer = tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, use_bias=True, bias_initializer=tf.constant_initializer(1.0))
+        
     def call(self, decoder_inputs, encoder_outputs, decoder_self_attention_bias, attention_bias):
         batch_size, length, hidden_size = tf.unstack(tf.shape(decoder_inputs))
         act = ACT(batch_size, length, hidden_size)
-        halt_threshold = 1.0 - self.hparams['act_epsilon']
+        halt_threshold = 1.0 - self.hparams.act_epsilon
         
         state = decoder_inputs
         previous_state = tf.zeros_like(state, name='previous_state')
-        for step in range(self.hparams['act_max_step']):
+        for step in range(self.hparams.act_max_step):
             # judge to continue
             if not act.should_continue(halt_threshold):
                 break
 
             # position and timestep encoding
-            state += model_utils.get_position_encoding(self.hparams['max_length'], hidden_size)
-            state += model_utils.get_timestep_encoding(step, self.hparams['act_max_step'], hidden_size)
+            state += model_utils.get_position_encoding(self.hparams.max_length, hidden_size)
+            state += model_utils.get_timestep_encoding(step, self.hparams.act_max_step, hidden_size)
             
             # to judge pondering
             pondering = self.pondering_layer(state)
@@ -292,6 +291,18 @@ class DecoderStack(tf.keras.Model):
             
             # proceed act step
             update_weights = act(pondering, halt_threshold)
+            
+            update_weights = act(pondering, halt_threshold)
+            
+            if(num_head_3logit):
+                self_attention_layer = SelfAttention(hparams.num_units, 3, hparams.dropout_rate, is_train) 
+            elif(num_head_5logit):
+                self_attention_layer = SelfAttention(hparams.num_units, 5, hparams.dropout_rate, is_train) 
+            
+            ffn_layer = FeedForwardNetwork(hparams.num_units, hparams.num_filter_units, hparams.dropout_rate, is_train)
+            self.self_attention_wrapper = LayerWrapper(self_attention_layer, hparams.num_units, hparams.dropout_rate, is_train)
+            self.ffn_wrapper = LayerWrapper(ffn_layer, hparams.num_units, hparams.dropout_rate, is_train)
+            self.output_norm = LayerNormalization(hparams.num_units)
             
             state = self.self_attention_wrapper(state, decoder_self_attention_bias)
             state = self.enc_dec_attention_wrapper(state, encoder_outputs, attention_bias)

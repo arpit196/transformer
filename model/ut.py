@@ -98,8 +98,8 @@ class UniversalTransformer(tf.keras.Model):
         return tape.gradient(loss, self.variables)
     
     def fit(self, ds, optimizer, writer):
-        for e in range(self.hparams['num_epochs']):
-            batch = ds.feed_dict(None, self.hparams['batch_size'], True)
+        for e in range(self.hparams.num_epochs):
+            batch = ds.feed_dict(None, self.hparams.batch_size, True)
             start = time.time()
             for b in batch:
                 inputs, targets = b[0], b[2]

@@ -51,6 +51,9 @@ class Hparams:
     parser.add_argument('--dropout_rate', default=0.3, type=float)
     parser.add_argument('--smoothing', default=0.1, type=float,
                         help="label smoothing rate")
+    parser.add_argument('--num_filter_units', default=1024*4, type=int,help="num_filt")
+    parser.add_argument('--warmup_steps',default=40000, type=int,help="warmup_steps")
+    parser.add_argument('--act_max_step', default=15, type=int, help="act_max")
 
     # test
     parser.add_argument('--test1', default='iwslt2016/segmented/test.de.bpe',

@@ -16,7 +16,7 @@ class UniversalTransformer(tf.keras.Model):
         super(UniversalTransformer, self).__init__()
         self.hparams = hparams
         self.is_train = is_train
-        self.embedding_layer = EmbeddingSharedWeights(hparam.vocab_size, hparams.num_units)
+        self.embedding_layer = EmbeddingSharedWeights(hparams.vocab_size, hparams.num_units)
         self.encoder_stack = EncoderStack(hparams, is_train)
         self.encoder_embedding_dropout = tf.keras.layers.Dropout(hparams.dropout_rate)
         

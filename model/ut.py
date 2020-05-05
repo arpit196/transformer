@@ -116,6 +116,25 @@ class UniversalTransformer(tf.keras.Model):
             print('elapsed: ', time.time() - start)
             self.save(optimizer)
             print('{} epoch finished. now {} step, loss: {:.4f}, acc: {:.4f}'.format(e, step, loss ,acc))
+    
+    def train(self, xs, ys):
+        inputs, targets = xs, ys
+        loss = self.loss(inputs, targets)
+        acc = self.acc(inputs, targets)
+                
+        grads = self.grads(inputs, targets)
+        optimizer.apply_gradients(zip(grads, self.variables), self.global_step)
+        
+        step = self.global_step.numpy()
+        with tf.contrib.summary.record_summaries_every_n_global_steps(10):
+            tf.contrib.summary.scalar('summary/acc', acc)
+            tf.contrib.summary.scalar('summary/loss', loss)
+            tf.contrib.summary.scalar('summary/learning_rate', self.learning_rate())
+            
+        tf.summary.scalar("loss", loss)
+        tf.summary.scalar("global_step", global_step)
+        summaries = tf.summary.merge_all()
+        return loss, train_op, self.global_step, summaries
         
     def predict(self, encoder_outputs, bias):
         pass

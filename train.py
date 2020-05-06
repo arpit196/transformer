@@ -75,8 +75,8 @@ with tf.Session() as sess:
             _loss = sess.run(loss) # train loss
 
             logging.info("# test evaluation")
-            _, _eval_summaries = sess.run([eval_init_op, eval_summaries])
-            summary_writer.add_summary(_eval_summaries, _gs)
+            #_, _eval_summaries = sess.run([eval_init_op, eval_summaries])
+            #summary_writer.add_summary(_eval_summaries, _gs)
 
             logging.info("# get hypotheses")
             hypotheses = get_hypotheses(num_eval_batches, num_eval_samples, sess, y_hat, m.idx2token)

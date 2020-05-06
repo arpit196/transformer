@@ -139,6 +139,42 @@ class UniversalTransformer(tf.keras.Model):
     def predict(self, encoder_outputs, bias):
         pass
         
+    '''    
+    def eval(self, xs, ys):
+        Predicts autoregressively
+        At inference, input ys is ignored.
+        Returns
+        y_hat: (N, T2)
+        
+        decoder_inputs, y, y_seqlen, sents2 = ys
+
+        decoder_inputs = tf.ones((tf.shape(xs[0])[0], 1), tf.int32) * self.token2idx["<s>"]
+        ys = (decoder_inputs, y, y_seqlen, sents2)
+
+        memory, sents1, src_masks = self._encode(xs, False)
+
+        logging.info("Inference graph is being built. Please be patient.")
+        for _ in tqdm(range(self.hp.maxlen2)):
+            logits, y_hat, y, sents2 = self._decode(ys, memory, src_masks, False)
+            if tf.reduce_sum(y_hat, 1) == self.token2idx["<pad>"]: break
+
+            _decoder_inputs = tf.concat((decoder_inputs, y_hat), 1)
+            ys = (_decoder_inputs, y, y_seqlen, sents2)
+
+        # monitor a random sample
+        n = tf.random_uniform((), 0, tf.shape(y_hat)[0]-1, tf.int32)
+        sent1 = sents1[n]
+        pred = convert_idx_to_token_tensor(y_hat[n], self.idx2token)
+        sent2 = sents2[n]
+
+        tf.summary.text("sent1", sent1)
+        tf.summary.text("pred", pred)
+        tf.summary.text("sent2", sent2)
+        summaries = tf.summary.merge_all()
+
+        return y_hat, summaries
+    '''
+        
     def _encode(self, inputs, attention_bias):
         embedded_inputs = self.embedding_layer(inputs)
         inputs_padding = model_utils.get_padding(inputs)
